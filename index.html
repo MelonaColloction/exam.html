@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه آزمون‌ساز</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
+        body{background:linear-gradient(135deg,#0F172A,#1E293B);min-height:100vh;padding:20px;color:#E2E8F0}
+        .container{max-width:1000px;margin:0 auto}
+        .page{display:none}.page.active{display:block}
+        .card{background:rgba(255,255,255,0.06);border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.08)}
+        .header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:16px 20px;background:rgba(255,255,255,0.05);border-radius:16px;margin-bottom:20px}
+        .header-actions{display:flex;gap:8px;flex-wrap:wrap}
+        h1{font-size:24px;font-weight:700;background:linear-gradient(135deg,#FCD34D,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        h2{font-size:20px;margin-bottom:12px;color:#F1F5F9}
+        h3{font-size:16px;margin-bottom:10px;color:#CBD5E1}
+        .wallet{background:linear-gradient(135deg,#FCD34D,#F59E0B);padding:6px 16px;border-radius:40px;font-weight:700;color:#0F172A;font-size:13px}
+        .btn{border:none;padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:inline-block;transition:0.2s}
+        .btn-primary{background:#3B82F6;color:#fff}
+        .btn-primary:hover{background:#2563EB}
+        .btn-success{background:#10B981;color:#fff}
+        .btn-success:hover{background:#059669}
+        .btn-danger{background:#EF4444;color:#fff}
+        .btn-danger:hover{background:#DC2626}
+        .btn-outline{background:transparent;color:#FCD34D;border:1px solid #FCD34D}
+        .btn-outline:hover{background:rgba(252,211,52,0.1)}
+        .btn-sm{padding:4px 12px;font-size:12px}
+        .btn-gold{background:linear-gradient(135deg,#FCD34D,#F59E0B);color:#0F172A;font-weight:700}
+        .btn-gold:hover{transform:scale(1.05)}
+        .btn-pdf{background:linear-gradient(135deg,#EF4444,#DC2626);color:#fff}
+        .btn-pdf:hover{transform:scale(1.05)}
+        .form-group{margin-bottom:14px}
+        label{display:block;font-weight:500;margin-bottom:4px;font-size:13px;color:#CBD5E1}
+        input,select,textarea{width:100%;padding:10px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;background:rgba(255,255,255,0.05);color:#F1F5F9}
+        input:focus,select:focus,textarea:focus{outline:none;border-color:#FCD34D}
+        select option{background:#1E293B;color:#F1F5F9}
+        textarea{min-height:70px;resize:vertical}
+        .row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+        .flex{display:flex;gap:8px;flex-wrap:wrap}
+        .flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+        .back{color:#FCD34D;cursor:pointer;font-weight:500;display:inline-block;margin-bottom:12px}
+        .back:hover{color:#F59E0B}
+        .flash{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#FCA5A5;padding:10px 14px;border-radius:10px;margin-bottom:12px;display:none}
+        .flash-success{background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.3);color:#6EE7B7}
+        .flash.show{display:block}
+        .exam-title{font-size:17px;font-weight:600;color:#F1F5F9}
+        .exam-meta{color:#94A3B8;font-size:13px;margin-top:3px}
+        .balance-box{background:rgba(252,211,52,0.08);border:1px solid rgba(252,211,52,0.15);padding:10px;border-radius:10px;text-align:center;margin-bottom:16px;color:#FCD34D}
+        .q-item{background:rgba(255,255,255,0.03);border-right:3px solid #FCD34D;padding:14px;margin-bottom:12px;border-radius:10px}
+        .q-meta{font-size:12px;color:#94A3B8;margin-bottom:4px}
+        .badge{background:rgba(252,211,52,0.15);color:#FCD34D;padding:2px 10px;border-radius:16px;font-size:11px;font-weight:500}
+        .preview{max-width:100px;border-radius:6px;margin-top:6px}
+        .empty{color:#64748B;text-align:center;padding:30px}
+        .info{background:rgba(255,255,255,0.03);text-align:center;font-size:12px;color:#94A3B8}
+        .exam-link{background:rgba(255,255,255,0.05);padding:10px 14px;border-radius:8px;direction:ltr;text-align:left;font-size:13px;word-break:break-all;border:1px solid rgba(255,255,255,0.06);color:#94A3B8;font-family:monospace}
+        .hidden{display:none}
+        .options label{display:block;padding:8px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-bottom:4px;cursor:pointer;color:#E2E8F0;font-size:14px}
+        .options label:hover{background:rgba(252,211,52,0.08)}
+        .options input[type=radio]{width:auto;margin-left:8px;accent-color:#FCD34D}
+        .footer{text-align:center;padding:16px 0;margin-top:16px;border-top:1px solid rgba(255,255,255,0.05);color:#64748B;font-size:12px}
+        .footer span{background:linear-gradient(135deg,#FCD34D,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:600}
+        .footer .heart{color:#EF4444;display:inline-block;animation:pulse 1.5s ease-in-out infinite}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+        .student-card{background:rgba(255,255,255,0.04);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:0.2s}
+        .student-card:hover{background:rgba(255,255,255,0.07)}
+        .student-card .name{font-size:16px;font-weight:600;color:#F1F5F9}
+        .student-card .national{color:#94A3B8;font-size:13px}
+        .student-card .answers-count{color:#FCD34D;font-size:13px}
+        .student-detail{background:rgba(255,255,255,0.03);border-radius:10px;padding:14px;margin-top:10px;display:none;border-right:3px solid #FCD34D}
+        .student-detail.show{display:block}
+        .student-detail .answer-item{padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14px}
+        .student-detail .answer-item:last-child{border-bottom:none}
+        .student-detail .q-text{color:#94A3B8}
+        .student-detail .a-text{color:#F1F5F9;font-weight:500}
+        .student-detail .score-text{color:#FCD34D;font-weight:600}
+        .search-box{width:100%;padding:10px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.05);color:#F1F5F9;font-size:14px;margin-bottom:12px}
+        .search-box:focus{outline:none;border-color:#FCD34D}
+        .search-box::placeholder{color:#64748B}
+        .stat-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px}
+        .stat-item{background:rgba(255,255,255,0.04);padding:10px;border-radius:10px;text-align:center}
+        .stat-item .num{font-size:20px;font-weight:700;color:#FCD34D}
+        .stat-item .label{font-size:12px;color:#94A3B8}
+        .cheat-badge{background:rgba(239,68,68,0.15);color:#FCA5A5;padding:2px 10px;border-radius:12px;font-size:11px;border:1px solid rgba(239,68,68,0.2)}
+        .admin-badge{background:rgba(252,211,52,0.15);color:#FCD34D;padding:2px 10px;border-radius:12px;font-size:11px;border:1px solid rgba(252,211,52,0.2)}
+        .toggle-link{color:#FCD34D;cursor:pointer;font-size:14px}
+        .toggle-link:hover{text-decoration:underline}
+        .charge-option{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+        .charge-option .option{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:0.2s}
+        .charge-option .option:hover{background:rgba(252,211,52,0.05);border-color:#FCD34D}
+        .charge-option .option.selected{background:rgba(252,211,52,0.1);border-color:#FCD34D}
+        .charge-option .option .coins{font-size:20px;font-weight:700;color:#FCD34D}
+        .charge-option .option .price{color:#94A3B8;font-size:13px}
+        .timer{font-size:28px;font-weight:700;color:#FCD34D;text-align:center;padding:12px;background:rgba(252,211,52,0.08);border-radius:12px;border:1px solid rgba(252,211,52,0.15);margin-bottom:16px}
+        .timer.warning{color:#EF4444;border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.08)}
+        .question-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.05);flex-wrap:wrap}
+        .question-nav .q-counter{color:#94A3B8;font-size:14px}
+        .question-nav .q-list{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0}
+        .question-nav .q-list .q-num{padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-size:13px;transition:0.2s}
+        .question-nav .q-list .q-num:hover{background:rgba(252,211,52,0.1)}
+        .question-nav .q-list .q-num.active{background:#FCD34D;color:#0F172A;border-color:#FCD34D}
+        .question-nav .q-list .q-num.answered{background:rgba(16,185,129,0.2);border-color:#10B981}
+        .question-nav .q-list .q-num.locked{opacity:0.4;cursor:not-allowed}
+        .result-correct{color:#10B981}
+        .result-wrong{color:#EF4444}
+        .result-negative{color:#F59E0B}
+        .reset-notice{background:rgba(252,211,52,0.1);border:1px solid #FCD34D;padding:12px 16px;border-radius:10px;text-align:center;margin-bottom:16px;color:#FCD34D}
+        .reset-notice strong{color:#fff}
+        .option-row{display:flex;gap:10px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+        .option-row input[type="radio"]{width:auto;accent-color:#FCD34D;cursor:pointer}
+        .option-row input[type="text"]{flex:1;min-width:150px;padding:8px 12px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;background:rgba(255,255,255,0.05);color:#F1F5F9}
+        .option-row input[type="text"]:focus{outline:none;border-color:#FCD34D}
+        .option-row .btn{background:#EF4444;color:#fff;border:none;padding:4px 10px;border-radius:8px;cursor:pointer;font-size:13px}
+        .option-row .btn:hover{background:#DC2626}
+        .manual-score-input{width:80px;padding:4px 8px;border:1px solid rgba(255,255,255,0.1);border-radius:6px;background:rgba(255,255,255,0.05);color:#F1F5F9;font-size:13px}
+        .manual-score-input:focus{outline:none;border-color:#FCD34D}
+        .score-summary{display:flex;gap:16px;font-size:14px;padding:8px 12px;background:rgba(252,211,52,0.08);border-radius:8px;border:1px solid rgba(252,211,52,0.15);flex-wrap:wrap;margin-bottom:12px}
+        .score-summary span{display:flex;align-items:center;gap:4px}
+        .score-summary .final{color:#FCD34D;font-weight:700}
+        .score-input-area{display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap}
+        @media(max-width:600px){.row-2{grid-template-columns:1fr}.header{flex-direction:column;align-items:flex-start;padding:14px}.option-row{flex-wrap:wrap}}
+    </style>
+</head>
+<body>
+<div class="container">
+
+<!-- ==================== صفحه ۱: ورود ==================== -->
+<div id="page-login" class="page active">
+    <div class="card" style="max-width:450px;margin:0 auto;">
+        <h2 id="login-title">📚 ورود به پنل</h2>
+        <div id="login-flash" class="flash"></div>
+        <div id="login-form">
+            <div class="form-group"><label>شماره موبایل</label><input type="text" id="login-phone" placeholder="09123456789"></div>
+            <div class="form-group"><label>رمز عبور</label><input type="password" id="login-password" placeholder="رمز عبور را وارد کنید"></div>
+            <button class="btn btn-primary" onclick="loginUser()" style="width:100%;padding:12px;">ورود</button>
+            <p style="text-align:center;margin-top:12px;font-size:13px;color:#94A3B8;">حساب ندارید؟ <span class="toggle-link" onclick="showRegister()">ثبت‌نام کنید</span></p>
+        </div>
+        <div id="register-form" class="hidden">
+            <div class="form-group"><label>شماره موبایل</label><input type="text" id="register-phone" placeholder="09123456789"></div>
+            <div class="form-group"><label>رمز عبور</label><input type="password" id="register-password" placeholder="رمز عبور (حداقل ۴ کاراکتر)"></div>
+            <div class="form-group"><label>تکرار رمز عبور</label><input type="password" id="register-password-confirm" placeholder="تکرار رمز عبور"></div>
+            <button class="btn btn-success" onclick="registerUser()" style="width:100%;padding:12px;">ثبت‌نام</button>
+            <p style="text-align:center;margin-top:12px;font-size:13px;color:#94A3B8;">حساب دارید؟ <span class="toggle-link" onclick="showLogin()">ورود</span></p>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== صفحه ۲: داشبورد ==================== -->
+<div id="page-dashboard" class="page">
+    <div class="header">
+        <div><h1>📚 پنل معلم</h1><span class="wallet">💰 موجودی: <span id="dash-balance">0</span> سکه</span><span id="admin-badge" class="admin-badge hidden" style="margin-right:8px;">👑 ادمین</span></div>
+        <div class="header-actions">
+            <button class="btn btn-gold" onclick="showPage('page-charge')">➕ شارژ</button>
+            <button class="btn btn-primary" onclick="showPage('page-create-exam')">+ آزمون</button>
+            <button class="btn btn-danger" onclick="logoutUser()">خروج</button>
+        </div>
+    </div>
+    <div id="dash-flash" class="flash"></div>
+    <div id="exam-list"></div>
+    <div class="card info">💡 هزینه ساخت 10 سکه | چهارگزینه‌ای 2، کوتاه 1، تشریحی 3 سکه</div>
+</div>
+
+<!-- ==================== صفحه ۳: ساخت آزمون ==================== -->
+<div id="page-create-exam" class="page">
+    <div class="card">
+        <span class="back" onclick="showPage('page-dashboard')">← بازگشت</span>
+        <div class="balance-box">💰 موجودی: <span id="create-balance">0</span> سکه (هزینه: 10)</div>
+        <h2>ساخت آزمون جدید</h2>
+        <div id="create-flash" class="flash"></div>
+        <div class="form-group"><label>عنوان</label><input type="text" id="exam-title" placeholder="عنوان آزمون"></div>
+        <div class="form-group"><label>زمان شروع</label><input type="datetime-local" id="exam-start"></div>
+        <div class="form-group"><label>مدت (دقیقه)</label><input type="number" id="exam-duration" value="60"></div>
+        <div class="form-group" style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.05);">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="exam-negative-score" style="width:auto;accent-color:#FCD34D;"> 📉 فعال کردن نمره منفی (هر ۳ غلط = ۱ درست)</label>
+        </div>
+        <div class="form-group">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="exam-lock-back" style="width:auto;accent-color:#FCD34D;"> 🔒 غیرفعال کردن برگشت به عقب (۱۰ سکه اضافه)</label>
+        </div>
+        <button class="btn btn-primary" onclick="createExam()">ایجاد آزمون</button>
+    </div>
+</div>
+
+<!-- ==================== صفحه ۴: مدیریت سوالات ==================== -->
+<div id="page-exam-detail" class="page">
+    <div class="card">
+        <span class="back" onclick="showPage('page-dashboard')">← بازگشت</span>
+        <h2 id="detail-title">مدیریت آزمون</h2>
+        <div id="detail-flash" class="flash"></div>
+        <div class="card">
+            <h3>➕ افزودن سوال</h3>
+            <form onsubmit="addQuestion(event)">
+                <div class="row-2">
+                    <div class="form-group"><label>نوع</label>
+                        <select id="q-type" onchange="toggleOptionsFields()">
+                            <option value="mcq">چهارگزینه‌ای (2)</option>
+                            <option value="short">پاسخ کوتاه (1)</option>
+                            <option value="descriptive">تشریحی (3)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>نمره</label><input type="number" id="q-score" value="1" min="1"></div>
+                </div>
+                <div class="form-group"><label>متن سوال</label><textarea id="q-text" required></textarea></div>
+                <div id="options-container" style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;margin-bottom:14px;border:1px solid rgba(255,255,255,0.06);">
+                    <label style="display:block;font-weight:500;margin-bottom:8px;color:#CBD5E1;">📋 گزینه‌ها</label>
+                    <div id="options-list"></div>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="addOptionField()" style="margin-top:8px;">➕ افزودن گزینه جدید</button>
+                    <p style="font-size:12px;color:#64748B;margin-top:6px;">گزینه صحیح را با انتخاب دایره مشخص کنید</p>
+                </div>
+                <div class="form-group"><label>عکس (1 سکه)</label><input type="file" id="q-image" accept="image/*"></div>
+                <button class="btn btn-primary">ذخیره سوال</button>
+            </form>
+        </div>
+        <div class="card">
+            <h3>📋 سوالات (<span id="q-count">0</span>)</h3>
+            <div id="question-list"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== صفحه ۵: نتایج ==================== -->
+<div id="page-results" class="page">
+    <div class="card">
+        <span class="back" onclick="showPage('page-dashboard')">← بازگشت</span>
+        <div class="flex-between">
+            <h2 id="results-title">نتایج آزمون</h2>
+            <button class="btn btn-pdf" onclick="generatePDF()" style="font-size:14px;padding:8px 20px;">📄 دریافت PDF</button>
+        </div>
+        <div id="results-flash" class="flash"></div>
+        <div class="stat-box" id="stat-box"></div>
+        <div class="flex-between" style="margin-bottom:12px;">
+            <div><strong>👥 دانش‌آموزان:</strong> <span id="students-count">0</span></div>
+            <button class="btn btn-danger" onclick="checkCheating()">🚨 بررسی تقلب - 5 سکه</button>
+        </div>
+        <input type="text" class="search-box" id="student-search" placeholder="🔍 جستجوی نام یا کد ملی..." oninput="filterStudents()">
+        <div id="students-list"></div>
+        <div class="card" style="background:rgba(252,211,52,0.05);border-color:rgba(252,211,52,0.15);margin-top:16px;">
+            <h3 style="color:#FCD34D;">🔗 لینک آزمون</h3>
+            <div class="exam-link" id="exam-link-display"></div>
+            <div class="flex" style="margin-top:10px;">
+                <button class="btn btn-primary" onclick="copyExamLink()">📋 کپی</button>
+                <button class="btn btn-success" onclick="openExamLink()">🚀 باز کردن</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== صفحه ۶: شارژ ==================== -->
+<div id="page-charge" class="page">
+    <div class="card">
+        <span class="back" onclick="showPage('page-dashboard')">← بازگشت</span>
+        <div class="balance-box">💰 موجودی فعلی: <strong id="charge-balance">0</strong> سکه</div>
+        <h2>💳 شارژ کیف پول</h2>
+        <div id="charge-flash" class="flash"></div>
+        <div class="reset-notice" id="reset-notice" style="display:none;">⚠️ به زودی با فعال شدن درگاه پرداخت، موجودی همه کاربران به <strong>۵۰ سکه</strong> تنظیم خواهد شد.</div>
+        <p style="color:#94A3B8;font-size:13px;margin-bottom:16px;text-align:center;">⚡ این بخش برای تست رایگان است.</p>
+        <div class="charge-option" id="charge-options">
+            <div class="option" onclick="selectCharge(50000,100)" data-amount="50000" data-coins="100"><div class="coins">🪙 ۱۰۰ سکه</div><div class="price">رایگان (تست)</div></div>
+            <div class="option" onclick="selectCharge(100000,200)" data-amount="100000" data-coins="200"><div class="coins">🪙 ۲۰۰ سکه</div><div class="price">رایگان (تست)</div></div>
+            <div class="option" onclick="selectCharge(150000,300)" data-amount="150000" data-coins="300"><div class="coins">🪙 ۳۰۰ سکه</div><div class="price">رایگان (تست)</div></div>
+            <div class="option" onclick="selectCharge(500000,1000)" data-amount="500000" data-coins="1000"><div class="coins">🪙 ۱۰۰۰ سکه</div><div class="price">رایگان (تست)</div></div>
+        </div>
+        <button class="btn btn-gold" onclick="freeCharge()" style="width:100%;padding:14px;font-size:16px;">🎁 دریافت سکه (رایگان)</button>
+    </div>
+</div>
+
+<!-- ==================== صفحه ۷: پاسخگویی دانش‌آموز ==================== -->
+<div id="page-take-exam" class="page">
+    <div class="card">
+        <span class="back" onclick="window.location.href=window.location.pathname">← بازگشت</span>
+        <div id="take-header"><h2 id="take-title">پاسخگویی به آزمون</h2><p id="take-meta" style="color:#64748B;"></p></div>
+        <div id="timer-container" class="hidden"><div class="timer" id="exam-timer">⏱ 00:00</div></div>
+        <div id="take-flash" class="flash"></div>
+        <div id="student-info-section" class="card">
+            <h3>👤 اطلاعات شما</h3>
+            <div class="row-2">
+                <div class="form-group"><label>نام و نام‌خانوادگی</label><input type="text" id="take-student-name" required placeholder="علی محمدی"></div>
+                <div class="form-group"><label>کد ملی</label><input type="text" id="take-national-id" required placeholder="۱۲۳۴۵۶۷۸۹۰"></div>
+            </div>
+            <button class="btn btn-gold" onclick="startExam()" style="width:100%;padding:14px;font-size:16px;margin-top:8px;">🚀 ورود به آزمون</button>
+        </div>
+        <div id="exam-questions-section" class="hidden">
+            <div id="question-nav">
+                <div class="question-nav">
+                    <button type="button" class="btn btn-outline" id="prev-btn" onclick="changeQuestion(-1)">◀ قبلی</button>
+                    <span class="q-counter" id="q-counter">سوال 1 از 0</span>
+                    <button type="button" class="btn btn-outline" id="next-btn" onclick="changeQuestion(1)">بعدی ▶</button>
+                </div>
+                <div class="q-list" id="q-list"></div>
+            </div>
+            <div id="take-questions"></div>
+            <button class="btn btn-primary" onclick="submitExamAnswers()" style="width:100%;padding:14px;margin-top:16px;">✅ ارسال پاسخ‌ها</button>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<div class="footer">
+    <span>⚡ ساخته شده توسط مانی رهبری</span> <span class="heart">❤️</span> <span>powered by ManiRahbari</span>
+</div>
+
+<script>
+// ============================================================
+// ===== دیتابیس محلی =====
+// ============================================================
+function getData(key, def){ try{ return JSON.parse(localStorage.getItem(key))||def }catch{ return def } }
+function setData(key, val){ localStorage.setItem(key, JSON.stringify(val)) }
+
+function getUsers(){ return getData('users', {}) }
+function setUsers(u){ setData('users', u) }
+function getExams(){ return getData('exams', []) }
+function setExams(e){ setData('exams', e) }
+function getAnswers(){ return getData('answers', []) }
+function setAnswers(a){ setData('answers', a) }
+function getLocations(){ return getData('locations', []) }
+function setLocations(l){ setData('locations', l) }
+function getCheatingFlags(){ return getData('cheating_flags', []) }
+function setCheatingFlags(c){ setData('cheating_flags', c) }
+function getTransactions(){ return getData('transactions', []) }
+function setTransactions(t){ setData('transactions', t) }
+
+// ============================================================
+// ===== تنظیمات =====
+// ============================================================
+const ADMIN_PHONE = '09930424417';
+const PRICE_LOCK_BACK = 10;
+const DEFAULT_BALANCE = 50;
+const CHEAT_DISTANCE = 50;
+
+// ============================================================
+// ===== متغیرهای سراسری =====
+// ============================================================
+let currentUser = null;
+let currentExamId = null;
+let currentExamData = null;
+let selectedCharge = null;
+let currentQuestionIndex = 0;
+let timerInterval = null;
+let isLockedMode = false;
+let hasNegativeScore = false;
+let studentAnswers = {};
+let examQuestions = [];
+let currentExamIdForStudent = null;
+let optionCounter = 0;
+
+// ============================================================
+// ===== توابع پایه =====
+// ============================================================
+function showPage(pageId){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    const el = document.getElementById(pageId);
+    if(el) el.classList.add('active');
+    if(pageId === 'page-dashboard'){ renderDashboard(); document.getElementById('dash-balance').textContent = currentUser ? currentUser.balance : 0; }
+    if(pageId === 'page-charge'){ document.getElementById('charge-balance').textContent = currentUser ? currentUser.balance : 0; document.getElementById('reset-notice').style.display = 'block'; }
+    if(pageId === 'page-create-exam'){ document.getElementById('create-balance').textContent = currentUser ? currentUser.balance : 0; }
+}
+
+function flash(id, msg, isSuccess=false){
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.textContent=msg;
+    el.className='flash show'+(isSuccess?' flash-success':'');
+    setTimeout(()=>{ el.className='flash'; }, 4000);
+}
+
+function getNextId(arr){ return arr.length?Math.max(...arr.map(x=>x.id))+1:1 }
+
+// ============================================================
+// ===== احراز هویت =====
+// ============================================================
+function showRegister(){
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('register-form').classList.remove('hidden');
+    document.getElementById('login-title').textContent = '📝 ثبت‌نام';
+}
+
+function showLogin(){
+    document.getElementById('login-form').classList.remove('hidden');
+    document.getElementById('register-form').classList.add('hidden');
+    document.getElementById('login-title').textContent = '📚 ورود به پنل';
+}
+
+function registerUser(){
+    const phone = document.getElementById('register-phone').value.trim();
+    const password = document.getElementById('register-password').value;
+    const passwordConfirm = document.getElementById('register-password-confirm').value;
+    
+    if(!phone || phone.length < 11){ flash('login-flash','شماره موبایل معتبر وارد کنید'); return; }
+    if(!password || password.length < 4){ flash('login-flash','رمز عبور حداقل ۴ کاراکتر'); return; }
+    if(password !== passwordConfirm){ flash('login-flash','رمز عبور و تکرار آن مطابقت ندارد'); return; }
+    
+    let users = getUsers();
+    if(users[phone]){ flash('login-flash','این شماره قبلاً ثبت‌نام شده است'); return; }
+    
+    const isAdmin = (phone === ADMIN_PHONE);
+    users[phone] = { phone: phone, password: password, balance: DEFAULT_BALANCE, isAdmin: isAdmin, created_at: new Date().toISOString() };
+    setUsers(users);
+    currentUser = users[phone];
+    flash('login-flash','✅ ثبت‌نام با موفقیت انجام شد!', true);
+    setTimeout(()=>{ showPage('page-dashboard'); renderDashboard(); }, 500);
+}
+
+function loginUser(){
+    const phone = document.getElementById('login-phone').value.trim();
+    const password = document.getElementById('login-password').value;
+    
+    if(!phone || !password){ flash('login-flash','لطفاً شماره و رمز را وارد کنید'); return; }
+    
+    let users = getUsers();
+    if(!users[phone]){ flash('login-flash','کاربری با این شماره یافت نشد'); return; }
+    if(users[phone].password !== password){ flash('login-flash','رمز عبور اشتباه است'); return; }
+    
+    currentUser = users[phone];
+    flash('login-flash','✅ خوش آمدید!', true);
+    setTimeout(()=>{ showPage('page-dashboard'); renderDashboard(); }, 500);
+}
+
+function logoutUser(){ 
+    currentUser = null; 
+    showPage('page-login'); 
+    document.getElementById('login-form').classList.remove('hidden'); 
+    document.getElementById('register-form').classList.add('hidden'); 
+    document.getElementById('login-title').textContent = '📚 ورود به پنل'; 
+}
+
+// ============================================================
+// ===== ریست سکه =====
+// ============================================================
+function resetAllUsersBalanceTo50(){
+    let users = getUsers(); 
+    let changed = false;
+    for(let phone in users){ 
+        if(phone === ADMIN_PHONE) continue; 
+        if(users[phone].balance !== DEFAULT_BALANCE){ 
+            users[phone].balance = DEFAULT_BALANCE; 
+            changed = true; 
+        } 
+    }
+    if(changed){ setUsers(users); if(currentUser && !currentUser.isAdmin){ currentUser.balance = DEFAULT_BALANCE; } }
+    return changed;
+}
+
+// ============================================================
+// ===== داشبورد =====
+// ============================================================
+function renderDashboard(){
+    if(!currentUser) return;
+    document.getElementById('dash-balance').textContent = currentUser.balance;
+    const adminBadge = document.getElementById('admin-badge');
+    if(currentUser.isAdmin){ adminBadge.classList.remove('hidden'); } else { adminBadge.classList.add('hidden'); }
+    const exams = getExams().filter(e=>e.teacher_phone===currentUser.phone);
+    const container = document.getElementById('exam-list');
+    if(exams.length===0){ container.innerHTML='<div class="card empty">هیچ آزمونی ساخته نشده است.</div>'; return; }
+    container.innerHTML=exams.map(e=>`
+        <div class="card">
+            <div class="exam-title">${e.title}</div>
+            <div class="exam-meta">📅 ${e.start_time} | ⏱ ${e.duration} دقیقه ${e.lock_back ? '🔒' : ''} ${e.negative_score ? '📉' : ''}</div>
+            <div class="flex">
+                <button class="btn btn-primary" onclick="openExam(${e.id})">مدیریت سوالات</button>
+                <button class="btn btn-outline" onclick="showResults(${e.id})">نتایج</button>
+                <button class="btn btn-outline" onclick="getExamLink(${e.id})">📋 لینک</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ============================================================
+// ===== شارژ =====
+// ============================================================
+function selectCharge(amount, coins){ selectedCharge = {amount, coins}; document.querySelectorAll('.charge-option .option').forEach(el=>{ el.classList.remove('selected'); if(el.dataset.amount == amount){ el.classList.add('selected'); } }); }
+
+function freeCharge(){
+    if(!currentUser){ flash('charge-flash','لطفاً ابتدا وارد شوید'); return; }
+    if(!currentUser.isAdmin){ flash('charge-flash','❌ فقط ادمین می‌تواند سکه رایگان دریافت کند!'); return; }
+    if(!selectedCharge){ flash('charge-flash','لطفاً یکی از گزینه‌ها را انتخاب کنید'); return; }
+    let users = getUsers();
+    users[currentUser.phone].balance += selectedCharge.coins;
+    currentUser.balance += selectedCharge.coins;
+    setUsers(users);
+    let trans = getTransactions();
+    trans.push({ teacher_phone: currentUser.phone, action: 'charge', amount: selectedCharge.coins, description: `شارژ رایگان ادمین ${selectedCharge.coins} سکه`, created_at: new Date().toISOString() });
+    setTransactions(trans);
+    flash('charge-flash',`✅ ${selectedCharge.coins} سکه به کیف پول اضافه شد!`, true);
+    document.getElementById('charge-balance').textContent = currentUser.balance;
+    selectedCharge = null;
+    document.querySelectorAll('.charge-option .option').forEach(el=>el.classList.remove('selected'));
+    setTimeout(()=>showPage('page-dashboard'), 1000);
+}
+
+// ============================================================
+// ===== ساخت آزمون =====
+// ============================================================
+function createExam(){
+    const title=document.getElementById('exam-title').value.trim();
+    const start=document.getElementById('exam-start').value;
+    const duration=parseInt(document.getElementById('exam-duration').value);
+    const lockBack = document.getElementById('exam-lock-back').checked;
+    const negativeScore = document.getElementById('exam-negative-score').checked;
+    if(!title||!start||!duration){ flash('create-flash','همه فیلدها را پر کنید'); return; }
+    let totalCost = 10; if(lockBack) totalCost += PRICE_LOCK_BACK;
+    if(currentUser.balance<totalCost){ flash('create-flash','موجودی کافی نیست!'); return; }
+    let users=getUsers();
+    users[currentUser.phone].balance-=totalCost;
+    currentUser.balance-=totalCost;
+    setUsers(users);
+    let trans=getTransactions();
+    trans.push({teacher_phone:currentUser.phone, action:'deduct', amount:-totalCost, description:'ساخت آزمون'});
+    setTransactions(trans);
+    let exams=getExams();
+    exams.push({ id:getNextId(exams), teacher_phone:currentUser.phone, title:title, start_time:start, duration:duration, is_active:true, lock_back:lockBack, negative_score:negativeScore, questions:[] });
+    setExams(exams);
+    flash('create-flash','✅ آزمون ساخته شد!', true);
+    document.getElementById('exam-title').value='';
+    document.getElementById('exam-start').value='';
+    document.getElementById('exam-duration').value='60';
+    document.getElementById('exam-lock-back').checked = false;
+    document.getElementById('exam-negative-score').checked = false;
+    setTimeout(()=>showPage('page-dashboard'), 1000);
+}
+
+// ============================================================
+// ===== مدیریت گزینه‌ها =====
+// ============================================================
+function toggleOptionsFields(){
+    const type = document.getElementById('q-type').value;
+    const container = document.getElementById('options-container');
+    if(type === 'mcq'){ container.style.display = 'block'; if(document.getElementById('options-list').children.length === 0){ for(let i=0; i<4; i++){ addOptionField(); } } }
+    else { container.style.display = 'none'; }
+}
+
+function addOptionField(){
+    const list = document.getElementById('options-list');
+    const id = optionCounter++;
+    const div = document.createElement('div');
+    div.className = 'option-row';
+    div.id = `option-row-${id}`;
+    div.innerHTML = `<input type="radio" name="correct_option" value="${id}" id="opt-radio-${id}"><input type="text" placeholder="گزینه ${list.children.length + 1}" id="opt-text-${id}"><button type="button" class="btn btn-danger btn-sm" onclick="removeOptionField(${id})">✕</button>`;
+    list.appendChild(div);
+}
+
+function removeOptionField(id){
+    const row = document.getElementById(`option-row-${id}`);
+    if(row){ const list = document.getElementById('options-list'); if(list.children.length > 2){ row.remove(); } else { flash('detail-flash','حداقل ۲ گزینه باید وجود داشته باشد!'); } }
+}
+
+function getOptionsData(){
+    const list = document.getElementById('options-list');
+    const rows = list.querySelectorAll('.option-row');
+    const options = []; let correctIndex = -1;
+    rows.forEach((row, idx) => {
+        const textInput = row.querySelector('input[type="text"]');
+        const radio = row.querySelector('input[type="radio"]');
+        if(textInput && textInput.value.trim()){ options.push(textInput.value.trim()); if(radio && radio.checked){ correctIndex = idx; } }
+    });
+    return { options, correctIndex };
+}
+
+// ============================================================
+// ===== مدیریت سوالات =====
+// ============================================================
+function openExam(examId){
+    currentExamId=examId;
+    const exams=getExams();
+    const exam=exams.find(e=>e.id===examId);
+    if(!exam) return;
+    document.getElementById('detail-title').textContent='📝 مدیریت: '+exam.title;
+    renderQuestions(examId);
+    setTimeout(() => { if(document.getElementById('q-type').value === 'mcq'){ toggleOptionsFields(); } }, 100);
+    showPage('page-exam-detail');
+}
+
+function renderQuestions(examId){
+    const exams=getExams();
+    const exam=exams.find(e=>e.id===examId);
+    if(!exam) return;
+    const qs=exam.questions||[];
+    document.getElementById('q-count').textContent=qs.length;
+    const container=document.getElementById('question-list');
+    if(qs.length===0){ container.innerHTML='<div class="empty">هنوز سوالی اضافه نشده</div>'; return; }
+    container.innerHTML=qs.map((q,idx)=>`
+        <div class="q-item">
+            <div class="q-meta"><span class="badge">${q.type}</span> نمره: ${q.score} ${q.image_path?' 🖼':''}</div>
+            <p>${q.text}</p>
+            ${q.image_path?`<img src="${q.image_path}" class="preview">`:''}
+            ${q.type === 'mcq' ? `<div style="font-size:12px;color:#94A3B8;margin-top:4px;">📋 گزینه‌ها: ${q.options}</div>` : ''}
+            <div class="flex"><button class="btn btn-danger btn-sm" onclick="deleteQuestion(${examId},${idx})">حذف</button></div>
+        </div>
+    `).join('');
+}
+
+function addQuestion(e){
+    e.preventDefault();
+    if(!currentUser||currentExamId===null) return;
+    const type = document.getElementById('q-type').value;
+    const text = document.getElementById('q-text').value.trim();
+    const score = parseInt(document.getElementById('q-score').value)||1;
+    const imageFile = document.getElementById('q-image').files[0];
+    if(!text){ flash('detail-flash','متن سوال را وارد کنید'); return; }
+    let options = ''; let correct = '';
+    if(type === 'mcq'){
+        const data = getOptionsData();
+        if(data.options.length < 2){ flash('detail-flash','حداقل ۲ گزینه وارد کنید'); return; }
+        if(data.correctIndex === -1){ flash('detail-flash','لطفاً گزینه صحیح را انتخاب کنید'); return; }
+        options = data.options.join(','); correct = String(data.correctIndex + 1);
+    }
+    let price = type==='mcq'?2:type==='short'?1:3;
+    if(imageFile) price+=1;
+    if(currentUser.balance<price){ flash('detail-flash','موجودی کافی نیست!'); return; }
+    let users=getUsers();
+    users[currentUser.phone].balance-=price;
+    currentUser.balance-=price;
+    setUsers(users);
+    let trans=getTransactions();
+    trans.push({teacher_phone:currentUser.phone, action:'deduct', amount:-price, exam_id:currentExamId, description:'افزودن سوال '+type});
+    setTransactions(trans);
+    let image_path=null;
+    if(imageFile){
+        const reader=new FileReader();
+        reader.onload=function(ev){ image_path=ev.target.result; saveQuestionToExam(type,text,options,correct,score,image_path); resetQuestionForm(); };
+        reader.readAsDataURL(imageFile);
+    } else {
+        saveQuestionToExam(type,text,options,correct,score,null);
+        resetQuestionForm();
+    }
+}
+
+function saveQuestionToExam(type,text,options,correct,score,image_path){
+    let exams=getExams();
+    const exam=exams.find(e=>e.id===currentExamId);
+    if(!exam) return;
+    if(!exam.questions) exam.questions=[];
+    exam.questions.push({ id:getNextId(exam.questions), type:type, text:text, options:options, correct_answer:correct, image_path:image_path, score:score });
+    setExams(exams);
+    renderQuestions(currentExamId);
+    flash('detail-flash','✅ سوال اضافه شد!', true);
+}
+
+function resetQuestionForm(){
+    document.getElementById('q-text').value = '';
+    document.getElementById('q-image').value = '';
+    document.getElementById('options-list').innerHTML = '';
+    optionCounter = 0;
+    if(document.getElementById('q-type').value === 'mcq'){ for(let i=0; i<4; i++){ addOptionField(); } }
+}
+
+function deleteQuestion(examId,qIndex){
+    if(!confirm('مطمئن هستید؟')) return;
+    let exams=getExams();
+    const exam=exams.find(e=>e.id===examId);
+    if(!exam) return;
+    exam.questions.splice(qIndex,1);
+    setExams(exams);
+    renderQuestions(examId);
+}
+
+// ============================================================
+// ===== توابع نمره‌دهی دستی (بدون بستن کارت) =====
+// ============================================================
+
+function saveManualScore(studentIdx, answerIdx, examId, studentName, studentNational, questionId){
+    const input = document.getElementById(`manual-score-${studentIdx}-${answerIdx}`);
+    if(!input) return;
+    
+    const score = parseFloat(input.value);
+    if(isNaN(score) || score < 0){
+        flash('results-flash','لطفاً یک عدد معتبر وارد کنید');
+        return;
+    }
+    
+    const exams = getExams();
+    const exam = exams.find(e => e.id === examId);
+    if(exam){
+        const q = exam.questions.find(q => q.id === questionId);
+        if(q && score > q.score){
+            flash('results-flash',`نمره وارد شده بیشتر از نمره سوال (${q.score}) است!`);
+            return;
+        }
+    }
+    
+    const key = `manual_scores_${examId}_${studentName}_${studentNational}`;
+    let manualScores = {};
+    try { manualScores = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e){ manualScores = {}; }
+    manualScores[questionId] = score;
+    localStorage.setItem(key, JSON.stringify(manualScores));
+    
+    flash('results-flash',`✅ نمره سوال ${questionId}: ${score} ذخیره شد!`, true);
+    updateStudentScoreOnly(studentIdx, examId, studentName, studentNational, questionId, score);
+}
+
+function clearManualScore(studentIdx, examId, studentName, studentNational, questionId){
+    const key = `manual_scores_${examId}_${studentName}_${studentNational}`;
+    let manualScores = {};
+    try { manualScores = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e){ manualScores = {}; }
+    delete manualScores[questionId];
+    localStorage.setItem(key, JSON.stringify(manualScores));
+    
+    flash('results-flash',`🗑️ نمره سوال ${questionId} حذف شد!`, true);
+    updateStudentScoreOnly(studentIdx, examId, studentName, studentNational, questionId, null);
+}
+
+function updateStudentScoreOnly(studentIdx, examId, studentName, studentNational, questionId, newScore){
+    const exams = getExams();
+    const exam = exams.find(e => e.id === examId);
+    if(!exam) return;
+    
+    const answers = getAnswers().filter(a => a.exam_id === examId && a.student_name === studentName && a.student_national_id === studentNational);
+    const manualKey = `manual_scores_${examId}_${studentName}_${studentNational}`;
+    let manualScores = {};
+    try { manualScores = JSON.parse(localStorage.getItem(manualKey) || '{}'); } catch(e){ manualScores = {}; }
+    
+    let autoScore = 0;
+    let totalManualScore = 0;
+    let hasManualScore = false;
+    let wrongCount = 0;
+    
+    answers.forEach(a => {
+        const q = exam.questions.find(q => q.id === a.question_id);
+        if(!q) return;
+        
+        const isMcq = q.type === 'mcq' && q.correct_answer;
+        const isCorrect = isMcq ? String(a.answer) === String(q.correct_answer) : false;
+        
+        if(isMcq && isCorrect){
+            autoScore += q.score || 1;
+        } else if(isMcq && !isCorrect){
+            wrongCount++;
+        }
+        
+        const manualScore = manualScores[a.question_id];
+        const hasManual = (manualScore !== undefined && manualScore !== null && manualScore !== '');
+        if(hasManual){
+            const score = parseFloat(manualScore);
+            if(!isNaN(score) && score >= 0){
+                totalManualScore += score;
+                hasManualScore = true;
+            }
+        }
+    });
+    
+    if(exam.negative_score && wrongCount >= 3){
+        const penalty = Math.floor(wrongCount / 3);
+        const penaltyScore = penalty * 1;
+        autoScore = Math.max(0, autoScore - penaltyScore);
+    }
+    
+    const finalScore = totalManualScore + autoScore;
+    
+    // ===== به‌روزرسانی فقط همین کارت (بدون بستن) =====
+    const card = document.querySelectorAll('.student-card')[studentIdx];
+    if(card){
+        const scoreTag = card.querySelector('.score-text');
+        if(scoreTag) scoreTag.textContent = `⭐ ${finalScore} نمره`;
+        
+        const detail = card.querySelector('.student-detail');
+        if(detail){
+            const summary = detail.querySelector('.score-summary');
+            if(summary){
+                summary.innerHTML = `
+                    <span class="result-correct">✅ خودکار: ${autoScore}</span>
+                    ${hasManualScore ? `<span class="result-negative">✏️ دستی: ${totalManualScore}</span>` : ''}
+                    <span class="final">⭐ نهایی: ${finalScore}</span>
+                `;
+            }
+            
+            if(questionId !== undefined && questionId !== null){
+                const ansIdx = answers.findIndex(a => a.question_id === questionId);
+                if(ansIdx !== -1){
+                    const input = detail.querySelector(`#manual-score-${studentIdx}-${ansIdx}`);
+                    if(input){
+                        if(newScore !== null && newScore !== undefined){
+                            input.value = newScore;
+                            input.style.borderColor = '#10B981';
+                        } else {
+                            input.value = '';
+                            input.style.borderColor = 'rgba(255,255,255,0.1)';
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ============================================================
+// ===== نتایج =====
+// ============================================================
+function showResults(examId){
+    currentExamId=examId;
+    const exams=getExams();
+    const exam=exams.find(e=>e.id===examId);
+    if(!exam) return;
+    currentExamData = exam;
+    document.getElementById('results-title').textContent='📊 نتایج: '+exam.title;
+    
+    const allAnswers=getAnswers().filter(a=>a.exam_id===examId);
+    const studentsMap = {};
+    allAnswers.forEach(a=>{
+        const key = a.student_name + '|' + a.student_national_id;
+        if(!studentsMap[key]){ studentsMap[key] = { name: a.student_name, national: a.student_national_id, answers: [] }; }
+        studentsMap[key].answers.push(a);
+    });
+    const students = Object.values(studentsMap);
+    document.getElementById('students-count').textContent = students.length;
+    
+    const totalQuestions = (exam.questions||[]).length;
+    const cheats = getCheatingFlags().filter(c=>c.exam_id===examId);
+    document.getElementById('stat-box').innerHTML = `
+        <div class="stat-item"><div class="num">${students.length}</div><div class="label">👥 دانش‌آموز</div></div>
+        <div class="stat-item"><div class="num">${totalQuestions}</div><div class="label">📝 سوال</div></div>
+        <div class="stat-item"><div class="num">${allAnswers.length}</div><div class="label">✅ پاسخ</div></div>
+        <div class="stat-item"><div class="num" style="color:${cheats.length>0?'#EF4444':'#10B981'}">${cheats.length}</div><div class="label">🚨 تقلب</div></div>
+    `;
+    
+    renderStudentsList(students, exam);
+    
+    const url=window.location.origin+window.location.pathname+'?exam='+examId;
+    document.getElementById('exam-link-display').textContent=url;
+    showPage('page-results');
+}
+
+function renderStudentsList(students, exam){
+    const container = document.getElementById('students-list');
+    if(students.length===0){ container.innerHTML='<div class="empty">هنوز پاسخی ثبت نشده است</div>'; return; }
+    
+    const cheats = getCheatingFlags().filter(c=>c.exam_id===currentExamId);
+    const cheatMap = {};
+    cheats.forEach(c=>{ cheatMap[c.student1] = true; cheatMap[c.student2] = true; });
+    
+    const isNegativeScore = exam.negative_score || false;
+    
+    container.innerHTML = students.map((s, idx) => {
+        let autoScore = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let totalManualScore = 0;
+        let hasManualScore = false;
+        
+        const manualKey = `manual_scores_${exam.id}_${s.name}_${s.national}`;
+        let manualScores = {};
+        try { manualScores = JSON.parse(localStorage.getItem(manualKey) || '{}'); } catch(e){ manualScores = {}; }
+        
+        s.answers.forEach(a => {
+            const q = (exam.questions||[]).find(q => q.id === a.question_id);
+            if(!q) return;
+            
+            const isMcq = q.type === 'mcq' && q.correct_answer;
+            const isCorrect = isMcq ? String(a.answer) === String(q.correct_answer) : false;
+            
+            if(isMcq && isCorrect){ 
+                correctCount++; 
+                autoScore += q.score || 1; 
+            } else if(isMcq && !isCorrect){ 
+                wrongCount++; 
+            }
+            
+            const manualScore = manualScores[a.question_id];
+            if(manualScore !== undefined && manualScore !== null && manualScore !== ''){
+                const score = parseFloat(manualScore);
+                if(!isNaN(score) && score >= 0){
+                    totalManualScore += score;
+                    hasManualScore = true;
+                }
+            }
+        });
+        
+        let negativeCount = 0;
+        if(isNegativeScore && wrongCount >= 3){
+            const penalty = Math.floor(wrongCount / 3);
+            const penaltyScore = penalty * 1;
+            autoScore = Math.max(0, autoScore - penaltyScore);
+            negativeCount = penalty;
+        }
+        
+        const finalScore = totalManualScore + autoScore;
+        
+        return `
+        <div class="student-card" onclick="toggleStudentDetail(${idx})">
+            <div class="flex-between">
+                <div>
+                    <div class="name">${s.name}</div>
+                    <div class="national">🆔 ${s.national}</div>
+                </div>
+                <div class="flex">
+                    <span class="answers-count">${s.answers.length} پاسخ</span>
+                    <span class="score-text">⭐ ${finalScore} نمره</span>
+                    ${cheatMap[s.name] ? '<span class="cheat-badge">🚨 تقلب</span>' : ''}
+                    ${hasManualScore ? '<span class="cheat-badge" style="background:rgba(16,185,129,0.15);color:#6EE7B7;border-color:rgba(16,185,129,0.2);">✏️ دستی</span>' : ''}
+                    <span style="color:#64748B;font-size:13px;">▼</span>
+                </div>
+            </div>
+            <div class="student-detail" id="detail-${idx}">
+                <div class="score-summary">
+                    <span class="result-correct">✅ خودکار: ${autoScore}</span>
+                    ${hasManualScore ? `<span class="result-negative">✏️ دستی: ${totalManualScore}</span>` : ''}
+                    <span class="final">⭐ نهایی: ${finalScore}</span>
+                </div>
+                
+                ${s.answers.map((a, ansIdx) => {
+                    const q = (exam.questions||[]).find(q => q.id === a.question_id);
+                    const isMcq = q && q.type === 'mcq' && q.correct_answer;
+                    const isCorrect = isMcq ? String(a.answer) === String(q.correct_answer) : false;
+                    const statusIcon = isMcq ? (isCorrect ? '✅' : '❌') : '📝';
+                    const statusColor = isMcq ? (isCorrect ? '#10B981' : '#EF4444') : '#94A3B8';
+                    const currentManualScore = (manualScores[a.question_id] !== undefined && manualScores[a.question_id] !== null && manualScores[a.question_id] !== '') ? manualScores[a.question_id] : '';
+                    
+                    return `<div class="answer-item">
+                        <div class="q-text">📌 ${q ? q.text : 'سوال حذف شده'}</div>
+                        <div class="a-text" style="color:${statusColor};font-size:13px;">
+                            ${statusIcon} پاسخ: ${a.answer || '(پاسخ داده نشده)'}
+                            ${isMcq ? ` | پاسخ صحیح: ${q.correct_answer}` : ''}
+                            ${q ? ` | <span style="color:#94A3B8;">نمره سوال: ${q.score}</span>` : ''}
+                        </div>
+                        <div class="score-input-area">
+                            <input type="number" class="manual-score-input" id="manual-score-${idx}-${ansIdx}" value="${currentManualScore}" placeholder="نمره" min="0" max="${q ? q.score : 10}">
+                            <span style="color:#94A3B8;font-size:12px;">/ ${q ? q.score : 10}</span>
+                            <button class="btn btn-success btn-sm" onclick="saveManualScore(${idx}, ${ansIdx}, ${exam.id}, '${s.name}', '${s.national}', ${q ? q.id : 0})" style="padding:2px 12px;font-size:12px;">💾 ذخیره</button>
+                            <button class="btn btn-outline btn-sm" onclick="clearManualScore(${idx}, ${exam.id}, '${s.name}', '${s.national}', ${q ? q.id : 0})" style="padding:2px 12px;font-size:12px;">🗑️ حذف</button>
+                        </div>
+                    </div>`;
+                }).join('')}
+                
+                <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.05);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                    <button class="btn btn-gold" onclick="confirmStudentScore(${idx}, ${exam.id}, '${s.name}', '${s.national}')" style="font-size:14px;padding:8px 20px;">✅ تایید نهایی نمره</button>
+                    <span id="confirm-status-${idx}" style="font-size:13px;color:#94A3B8;"></span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    window._studentsData = students;
+}
+
+function confirmStudentScore(studentIdx, examId, studentName, studentNational){
+    const key = `manual_scores_${examId}_${studentName}_${studentNational}`;
+    let manualScores = {};
+    try { manualScores = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e){ manualScores = {}; }
+    
+    let totalManual = 0;
+    let hasManualScore = false;
+    for(let qId in manualScores){
+        const score = parseFloat(manualScores[qId]);
+        if(!isNaN(score) && score >= 0){
+            totalManual += score;
+            hasManualScore = true;
+        }
+    }
+    
+    const exams = getExams();
+    const exam = exams.find(e => e.id === examId);
+    if(!exam) return;
+    
+    const answers = getAnswers().filter(a => a.exam_id === examId && a.student_name === studentName && a.student_national_id === studentNational);
+    let autoScore = 0;
+    let wrongCount = 0;
+    
+    answers.forEach(a => {
+        const q = exam.questions.find(q => q.id === a.question_id);
+        if(q && q.type === 'mcq' && q.correct_answer){
+            const isCorrect = String(a.answer) === String(q.correct_answer);
+            if(isCorrect){ autoScore += q.score || 1; }
+            else { wrongCount++; }
+        }
+    });
+    
+    if(exam.negative_score && wrongCount >= 3){
+        const penalty = Math.floor(wrongCount / 3);
+        const penaltyScore = penalty * 1;
+        autoScore = Math.max(0, autoScore - penaltyScore);
+    }
+    
+    const finalScore = totalManual + autoScore;
+    
+    const statusEl = document.getElementById(`confirm-status-${studentIdx}`);
+    if(statusEl){
+        statusEl.textContent = `✅ نمره نهایی: ${finalScore}`;
+        statusEl.style.color = '#6EE7B7';
+    }
+    
+    flash('results-flash',`✅ نمره نهایی دانش‌آموز ${studentName}: ${finalScore}`, true);
+}
+
+function toggleStudentDetail(idx){
+    const el = document.getElementById('detail-'+idx);
+    if(el){ el.classList.toggle('show'); document.querySelectorAll('.student-detail.show').forEach(d=>{ if(d.id !== 'detail-'+idx) d.classList.remove('show'); }); }
+}
+
+function filterStudents(){
+    const search = document.getElementById('student-search').value.trim().toLowerCase();
+    const cards = document.querySelectorAll('.student-card');
+    cards.forEach((card, idx)=>{
+        const name = window._studentsData[idx]?.name?.toLowerCase() || '';
+        const national = window._studentsData[idx]?.national || '';
+        const match = name.includes(search) || national.includes(search);
+        card.style.display = match ? 'block' : 'none';
+    });
+}
+
+// ============================================================
+// ===== تولید PDF =====
+// ============================================================
+function generatePDF(){
+    try {
+        if(!currentExamData){ flash('results-flash','اطلاعات آزمون یافت نشد'); return; }
+        
+        const exam = currentExamData;
+        const allAnswers = getAnswers().filter(a => a.exam_id === exam.id);
+        const studentsMap = {};
+        allAnswers.forEach(a=>{
+            const key = a.student_name + '|' + a.student_national_id;
+            if(!studentsMap[key]){ studentsMap[key] = { name: a.student_name, national: a.student_national_id, answers: [] }; }
+            studentsMap[key].answers.push(a);
+        });
+        const students = Object.values(studentsMap);
+        
+        if(students.length === 0){ flash('results-flash','هیچ دانش‌آموزی پاسخ نداده است'); return; }
+        if(typeof window.jspdf === 'undefined'){ flash('results-flash','کتابخانه PDF بارگذاری نشد! لطفاً صفحه را رفرش کنید'); return; }
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = 210;
+        const margin = 15;
+        let y = 20;
+        
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`گزارش آزمون: ${exam.title}`, pageWidth/2, y, { align: 'center' });
+        y += 10;
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`تاریخ: ${new Date().toLocaleDateString('fa-IR')}`, pageWidth/2, y, { align: 'center' });
+        y += 10;
+        
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`تعداد دانش‌آموزان: ${students.length}`, margin, y);
+        y += 8;
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 8;
+        
+        students.forEach((s, idx) => {
+            if(y > 260){ doc.addPage(); y = 20; }
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${idx+1}. ${s.name} - کد ملی: ${s.national}`, margin, y);
+            y += 6;
+            
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            
+            let totalScore = 0;
+            let correctCount = 0;
+            let wrongCount = 0;
+            
+            s.answers.forEach(a => {
+                const q = exam.questions.find(q => q.id === a.question_id);
+                if(!q) return;
+                
+                const isMcq = q.type === 'mcq' && q.correct_answer;
+                const isCorrect = isMcq ? String(a.answer) === String(q.correct_answer) : false;
+                
+                const answerText = `${q.text.substring(0, 30)}... => پاسخ: ${a.answer || 'پاسخ داده نشده'}`;
+                doc.text(`• ${answerText}`, margin + 5, y);
+                y += 5;
+                
+                if(isMcq){
+                    if(isCorrect){ correctCount++; totalScore += q.score || 1; }
+                    else { wrongCount++; }
+                }
+            });
+            
+            if(exam.negative_score && wrongCount >= 3){
+                const penalty = Math.floor(wrongCount / 3);
+                const penaltyScore = penalty * 1;
+                totalScore = Math.max(0, totalScore - penaltyScore);
+            }
+            
+            y += 3;
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`⭐ نمره نهایی: ${totalScore}`, margin + 5, y);
+            y += 6;
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`✅ درست: ${correctCount} | ❌ غلط: ${wrongCount}`, margin + 5, y);
+            y += 10;
+            
+            if(idx < students.length - 1){ doc.line(margin, y, pageWidth - margin, y); y += 5; }
+        });
+        
+        const filename = `گزارش_آزمون_${exam.title}_${new Date().toISOString().slice(0,10)}.pdf`;
+        doc.save(filename);
+        flash('results-flash',`✅ PDF با موفقیت ذخیره شد!`, true);
+    } catch(e){
+        flash('results-flash','❌ خطا در تولید PDF: ' + e.message);
+    }
+}
+
+// ============================================================
+// ===== لینک =====
+// ============================================================
+function getExamLink(examId){
+    const url=window.location.origin+window.location.pathname+'?exam='+examId;
+    navigator.clipboard.writeText(url).then(()=>{ alert('✅ لینک کپی شد:\n'+url); }).catch(()=>{ prompt('لینک را کپی کنید:', url); });
+}
+
+function copyExamLink(){
+    const text=document.getElementById('exam-link-display').textContent;
+    navigator.clipboard.writeText(text).then(()=>{ alert('✅ لینک کپی شد:\n'+text); }).catch(()=>{ prompt('لینک را کپی کنید:', text); });
+}
+
+function openExamLink(){
+    const text=document.getElementById('exam-link-display').textContent;
+    if(text){ window.open(text, '_blank'); } else { alert('لینکی وجود ندارد'); }
+}
+
+// ============================================================
+// ===== بررسی تقلب =====
+// ============================================================
+function checkCheating(){
+    if(!currentUser||currentExamId===null) return;
+    if(currentUser.balance<5){ flash('results-flash','موجودی کافی نیست!'); return; }
+    
+    let users=getUsers();
+    users[currentUser.phone].balance-=5;
+    currentUser.balance-=5;
+    setUsers(users);
+    let trans=getTransactions();
+    trans.push({teacher_phone:currentUser.phone, action:'deduct', amount:-5, exam_id:currentExamId, description:'بررسی تقلب'});
+    setTransactions(trans);
+    
+    const locs=getLocations().filter(l=>l.exam_id===currentExamId);
+    const flags=[];
+    
+    // بررسی فاصله ۵۰ متر
+    for(let i=0;i<locs.length;i++){
+        for(let j=i+1;j<locs.length;j++){
+            const dist = haversine(locs[i].lat, locs[i].lng, locs[j].lat, locs[j].lng);
+            if(dist <= CHEAT_DISTANCE){
+                flags.push({
+                    exam_id: currentExamId,
+                    student1: locs[i].student_name || 'نامشخص',
+                    student2: locs[j].student_name || 'نامشخص',
+                    distance_meters: dist,
+                    recorded_at: new Date().toISOString()
+                });
+            }
+        }
+    }
+    
+    // بررسی موقعیت‌های یکسان
+    for(let i=0;i<locs.length;i++){
+        for(let j=i+1;j<locs.length;j++){
+            if(locs[i].lat === locs[j].lat && locs[i].lng === locs[j].lng){
+                flags.push({
+                    exam_id: currentExamId,
+                    student1: locs[i].student_name || 'نامشخص',
+                    student2: locs[j].student_name || 'نامشخص',
+                    distance_meters: 0,
+                    recorded_at: new Date().toISOString(),
+                    is_exact_match: true
+                });
+            }
+        }
+    }
+    
+    // حذف تکراری‌ها
+    let uniqueFlags = [];
+    let seen = new Set();
+    flags.forEach(f => {
+        const key = f.student1 + '|' + f.student2;
+        if(!seen.has(key)){ seen.add(key); uniqueFlags.push(f); }
+    });
+    
+    let allFlags=getCheatingFlags();
+    allFlags=allFlags.filter(f=>f.exam_id!==currentExamId);
+    allFlags.push(...uniqueFlags);
+    setCheatingFlags(allFlags);
+    
+    flash('results-flash',`✅ ${uniqueFlags.length} مورد تقلب پیدا شد`, true);
+    setTimeout(()=>showResults(currentExamId), 500);
+}
+
+function haversine(lat1,lon1,lat2,lon2){
+    const R=6371000;
+    const phi1=lat1*Math.PI/180;
+    const phi2=lat2*Math.PI/180;
+    const dphi=(lat2-lat1)*Math.PI/180;
+    const dlambda=(lon2-lon1)*Math.PI/180;
+    const a=Math.sin(dphi/2)**2+Math.cos(phi1)*Math.cos(phi2)*Math.sin(dlambda/2)**2;
+    const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+    return R*c;
+}
+
+// ============================================================
+// ===== صفحه دانش‌آموز =====
+// ============================================================
+function loadExamForStudent(examId){
+    if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(
+            function(pos){ 
+                let locs=getLocations(); 
+                locs.push({ exam_id:examId, student_name:'', student_national_id:'', lat:pos.coords.latitude, lng:pos.coords.longitude, recorded_at:new Date().toISOString() }); 
+                setLocations(locs); 
+                loadExamContent(examId); 
+            },
+            function(err){ flash('take-flash','⚠️ موقعیت مکانی شما ثبت نشد. لطفاً GPS را روشن کنید.'); loadExamContent(examId); },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    } else { flash('take-flash','⚠️ مرورگر شما از GPS پشتیبانی نمی‌کند'); loadExamContent(examId); }
+}
+
+function loadExamContent(examId){
+    const exams=getExams();
+    const exam=exams.find(e=>e.id===examId);
+    if(!exam){ flash('take-flash','❌ آزمون پیدا نشد!'); return; }
+    if(!exam.questions || exam.questions.length === 0){
+        document.getElementById('take-questions').innerHTML = `<div class="empty" style="padding:30px;text-align:center;">⚠️ هیچ سوالی برای این آزمون تعریف نشده است</div>`;
+        document.getElementById('q-counter').textContent = 'سوال 0 از 0';
+        document.getElementById('q-list').innerHTML = '';
+        document.getElementById('exam-questions-section').classList.remove('hidden');
+        document.getElementById('student-info-section').style.display = 'none';
+        showPage('page-take-exam');
+        return;
+    }
+    examQuestions = exam.questions;
+    currentExamIdForStudent = examId;
+    isLockedMode = exam.lock_back || false;
+    hasNegativeScore = exam.negative_score || false;
+    showExamContent(examId);
+}
+
+function showExamContent(examId){
+    const exams=getExams();
+    const exam=exams.find(e=>e.id===examId);
+    if(!exam){ flash('take-flash','❌ آزمون پیدا نشد!'); return; }
+    const now=new Date();
+    const start=new Date(exam.start_time);
+    const end=new Date(start.getTime()+exam.duration*60000);
+    if(now<start){ flash('take-flash','⏳ زمان شروع آزمون هنوز فرا نرسیده است.'); return; }
+    if(now>end){ flash('take-flash','⏰ زمان آزمون به پایان رسیده است.'); return; }
+    document.getElementById('timer-container').classList.remove('hidden');
+    startTimer(exam.duration);
+    document.getElementById('take-title').textContent='📝 '+exam.title;
+    document.getElementById('take-meta').textContent='شروع: '+exam.start_time+' | مدت: '+exam.duration+' دقیقه';
+    currentQuestionIndex = 0;
+    studentAnswers = {};
+    const questions = examQuestions;
+    if(questions.length === 0){
+        document.getElementById('take-questions').innerHTML = `<div class="empty" style="padding:30px;text-align:center;">⚠️ هیچ سوالی برای این آزمون تعریف نشده است</div>`;
+        document.getElementById('q-list').innerHTML = '';
+        document.getElementById('q-counter').textContent = 'سوال 0 از 0';
+        document.getElementById('exam-questions-section').classList.remove('hidden');
+        document.getElementById('student-info-section').style.display = 'none';
+        showPage('page-take-exam');
+        return;
+    }
+    renderQuestionNav(questions);
+    renderQuestion(questions, 0);
+    document.getElementById('take-form').dataset.examId=examId;
+    showPage('page-take-exam');
+}
+
+function renderQuestionNav(questions){
+    const container = document.getElementById('q-list');
+    if(!questions || questions.length === 0){ container.innerHTML = ''; document.getElementById('q-counter').textContent = 'سوال 0 از 0'; return; }
+    document.getElementById('q-counter').textContent = `سوال 1 از ${questions.length}`;
+    container.innerHTML = questions.map((q, idx) => `<div class="q-num ${idx === 0 ? 'active' : ''}" onclick="goToQuestion(${idx})" id="q-num-${idx}">${idx + 1}</div>`).join('');
+}
+
+function renderQuestion(questions, index){
+    if(!questions || questions.length === 0){ document.getElementById('take-questions').innerHTML = '<div class="empty">⚠️ هیچ سوالی وجود ندارد</div>'; document.getElementById('q-counter').textContent = 'سوال 0 از 0'; return; }
+    if(index < 0) index = 0;
+    if(index >= questions.length) index = questions.length - 1;
+    currentQuestionIndex = index;
+    const q = questions[index];
+    const container = document.getElementById('take-questions');
+    document.getElementById('q-counter').textContent = `سوال ${index + 1} از ${questions.length}`;
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    if(isLockedMode){ prevBtn.disabled = true; prevBtn.style.opacity = '0.4'; prevBtn.style.cursor = 'not-allowed'; }
+    else { prevBtn.disabled = (index === 0); prevBtn.style.opacity = (index === 0) ? '0.4' : '1'; prevBtn.style.cursor = (index === 0) ? 'not-allowed' : 'pointer'; }
+    nextBtn.disabled = (index === questions.length - 1);
+    nextBtn.style.opacity = (index === questions.length - 1) ? '0.4' : '1';
+    nextBtn.style.cursor = (index === questions.length - 1) ? 'not-allowed' : 'pointer';
+    document.querySelectorAll('.q-num').forEach(el => {
+        el.classList.remove('active');
+        const idx = parseInt(el.textContent) - 1;
+        if(idx === index) el.classList.add('active');
+        if(studentAnswers[idx]) el.classList.add('answered');
+        if(isLockedMode && idx < index) el.classList.add('locked');
+    });
+    let html = `<div class="q-item">`;
+    html += `<div class="flex-between"><span class="badge">سوال ${index + 1}</span><span style="color:#64748B;font-size:13px;">${q.score} نمره</span></div>`;
+    html += `<p>${q.text}</p>`;
+    if(q.image_path) html += `<img src="${q.image_path}" class="preview">`;
+    const savedAnswer = studentAnswers[index] || '';
+    if(q.type === 'mcq'){
+        const opts = q.options.split(',').map(s=>s.trim());
+        html += `<div class="options">`;
+        opts.forEach((opt, oi) => {
+            const checked = (savedAnswer === String(oi + 1)) ? 'checked' : '';
+            html += `<label><input type="radio" name="q_${q.id}" value="${oi + 1}" ${checked} onchange="saveAnswer(${index}, this.value)"> ${opt}</label>`;
+        });
+        html += `</div>`;
+    } else if(q.type === 'short'){
+        html += `<div class="form-group"><input type="text" name="q_${q.id}" placeholder="پاسخ..." value="${savedAnswer}" onchange="saveAnswer(${index}, this.value)"></div>`;
+    } else {
+        html += `<div class="form-group"><textarea name="q_${q.id}" rows="3" placeholder="پاسخ تشریحی..." onchange="saveAnswer(${index}, this.value)">${savedAnswer}</textarea></div>`;
+    }
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+function saveAnswer(index, value){ studentAnswers[index] = value; const el = document.getElementById(`q-num-${index}`); if(el) el.classList.add('answered'); }
+
+function changeQuestion(direction){
+    const questions = examQuestions;
+    const newIndex = currentQuestionIndex + direction;
+    if(newIndex < 0 || newIndex >= questions.length) return;
+    if(isLockedMode && direction < 0){ flash('take-flash','⚠️ در این آزمون امکان برگشت به سوالات قبلی وجود ندارد!'); return; }
+    renderQuestion(questions, newIndex);
+}
+
+function goToQuestion(index){
+    const questions = examQuestions;
+    if(index < 0 || index >= questions.length) return;
+    if(isLockedMode && index < currentQuestionIndex){ flash('take-flash','⚠️ در این آزمون امکان رفتن به سوالات قبلی وجود ندارد!'); return; }
+    renderQuestion(questions, index);
+}
+
+function startExam(){
+    const studentName = document.getElementById('take-student-name').value.trim();
+    const nationalId = document.getElementById('take-national-id').value.trim();
+    if(!studentName || !nationalId){ flash('take-flash','لطفاً نام و کد ملی را وارد کنید'); return; }
+    document.getElementById('student-info-section').style.display = 'none';
+    document.getElementById('exam-questions-section').classList.remove('hidden');
+    if(examQuestions.length === 0){ document.getElementById('take-questions').innerHTML = '<div class="empty">⚠️ هیچ سوالی برای این آزمون تعریف نشده است</div>'; return; }
+    renderQuestion(examQuestions, 0);
+}
+
+function startTimer(durationMinutes){
+    if(timerInterval) clearInterval(timerInterval);
+    let totalSeconds = durationMinutes * 60;
+    timerInterval = setInterval(() => {
+        totalSeconds--;
+        if(totalSeconds <= 0){
+            clearInterval(timerInterval);
+            document.getElementById('exam-timer').textContent = '⏱ 00:00';
+            document.getElementById('exam-timer').classList.add('warning');
+            flash('take-flash','⏰ زمان آزمون به پایان رسید!');
+            document.getElementById('take-form').querySelectorAll('input, textarea, button').forEach(el => el.disabled = true);
+            return;
+        }
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        document.getElementById('exam-timer').textContent = `⏱ ${timeStr}`;
+        if(totalSeconds < 300){ document.getElementById('exam-timer').classList.add('warning'); }
+        else { document.getElementById('exam-timer').classList.remove('warning'); }
+    }, 1000);
+}
+
+function submitExamAnswers(){
+    const examId = currentExamIdForStudent;
+    const studentName = document.getElementById('take-student-name').value.trim();
+    const nationalId = document.getElementById('take-national-id').value.trim();
+    if(!studentName||!nationalId){ flash('take-flash','نام و کد ملی را وارد کنید'); return; }
+    const questions = examQuestions;
+    const unanswered = [];
+    questions.forEach((q, idx) => { if(!studentAnswers[idx]){ unanswered.push(idx + 1); } });
+    if(unanswered.length > 0){
+        if(!confirm(`⚠️ شما به سوالات شماره ${unanswered.join(', ')} پاسخ نداده‌اید. آیا مطمئن هستید که می‌خواهید ارسال کنید؟`)){ return; }
+    }
+    const answers = [];
+    questions.forEach((q, idx) => {
+        if(studentAnswers[idx]){
+            answers.push({ exam_id: examId, student_name: studentName, student_national_id: nationalId, question_id: q.id, answer: studentAnswers[idx], submitted_at: new Date().toISOString() });
+        }
+    });
+    if(answers.length === 0){ flash('take-flash','هیچ پاسخی ارسال نشده'); return; }
+    let allAnswers = getAnswers();
+    allAnswers.push(...answers);
+    setAnswers(allAnswers);
+    let locs = getLocations();
+    const lastLoc = locs.filter(l => l.exam_id === examId).pop();
+    if(lastLoc){ lastLoc.student_name = studentName; lastLoc.student_national_id = nationalId; setLocations(locs); }
+    if(timerInterval) clearInterval(timerInterval);
+    flash('take-flash',`✅ پاسخ‌ها ثبت شد، ${studentName} عزیز!`, true);
+    document.getElementById('take-student-name').value='';
+    document.getElementById('take-national-id').value='';
+    document.getElementById('take-questions').innerHTML='';
+    document.getElementById('student-info-section').style.display = 'block';
+    document.getElementById('exam-questions-section').classList.add('hidden');
+    setTimeout(()=>{ showPage('page-dashboard'); }, 2000);
+}
+
+// ============================================================
+// ===== بررسی لینک =====
+// ============================================================
+function checkUrlForExam(){
+    const params=new URLSearchParams(window.location.search);
+    const examId=params.get('exam');
+    if(examId){
+        const id=parseInt(examId);
+        const exams=getExams();
+        const exam=exams.find(e=>e.id===id);
+        if(exam){
+            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+            document.getElementById('page-take-exam').classList.add('active');
+            currentExamIdForStudent = id;
+            loadExamForStudent(id);
+            return true;
+        } else {
+            alert('❌ آزمون با شناسه '+id+' پیدا نشد!');
+            return false;
+        }
+    }
+    return false;
+}
+
+// ============================================================
+// ===== مقداردهی اولیه =====
+// ============================================================
+window.onload=function(){
+    const qType = document.getElementById('q-type');
+    if(qType){
+        qType.addEventListener('change', function(){ 
+            const optionsGroup = document.getElementById('options-group');
+            if(optionsGroup){ optionsGroup.style.display = this.value === 'mcq' ? 'block' : 'none'; }
+        });
+    }
+    
+    resetAllUsersBalanceTo50();
+    
+    const hasExam = checkUrlForExam();
+    if(!hasExam){
+        const users = getUsers();
+        const savedPhone = localStorage.getItem('currentUserPhone');
+        if(savedPhone && users[savedPhone]){ currentUser = users[savedPhone]; showPage('page-dashboard'); renderDashboard(); }
+        else { showPage('page-login'); }
+    }
+};
+
+function saveCurrentUser(){ if(currentUser){ localStorage.setItem('currentUserPhone', currentUser.phone); } else { localStorage.removeItem('currentUserPhone'); } }
+
+const origLogin = loginUser;
+loginUser = function(){ origLogin(); saveCurrentUser(); };
+
+const origRegister = registerUser;
+registerUser = function(){ origRegister(); saveCurrentUser(); };
+
+const origLogout = logoutUser;
+logoutUser = function(){ origLogout(); saveCurrentUser(); };
+</script>
+
+</body>
+  </html>
